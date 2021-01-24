@@ -95,6 +95,8 @@ public class LevelData : MonoBehaviour
         }
     }
 
+    
+
  
 
     // The following table assumes a unity rotation of 0  
@@ -180,6 +182,36 @@ public class LevelData : MonoBehaviour
         return connected;
     }
 
+    List<CellCoord> GetConnectedList(CellCoord current)
+    {
+        List<CellCoord> connected_list = new List<CellCoord>();
+
+        // given a cell coord, return a list of connected cell coords
+        //0   0,1
+        //0   0,-1
+        //1   1, 0
+        //1   -1,0
+        for (int i = 0; i < 4; i++)
+        {
+            int drow = 0;
+            int dcol = 0;
+            switch (i)
+            {
+                case 0: drow = 0; dcol = 1; break;
+                case 1: drow = 0; dcol = -1; break;
+                case 2: drow = 1; dcol = 0; break;
+                case 3: drow = -1; dcol = 0; break;
+
+            }
+            CellCoord tentative = new CellCoord(current.row + drow, current.col + dcol);
+            if (AreConnected(current, tentative))
+            {
+                connected_list.Add(tentative);
+            }
+        }
+        return connected_list;
+    }
+
     struct DistanceAndParent
     {
         public DistanceAndParent(int d, CellCoord p)
@@ -193,9 +225,8 @@ public class LevelData : MonoBehaviour
 
     Queue<CellCoord> MakeShortestPath(CellCoord start, CellCoord end)
     {
-        // bredth first search
+        // breadth first search
         Queue<CellCoord> open_q = new Queue<CellCoord>();
-
         
         // node 2 distanceandparentmap cell coord and how I got there
         Dictionary<CellCoord, DistanceAndParent> visited = new Dictionary<CellCoord, DistanceAndParent>();
@@ -211,30 +242,16 @@ public class LevelData : MonoBehaviour
                 break;
             // otherwise walk each neighbor and add any accessible ones
             int current_distance = visited[current].distance;
-            
-            //0   0,1
-            //0   0,-1
-            //1   1, 0
-            //1   -1,0
-            for (int i = 0; i < 4; i++)
-            {
-                int drow = 0;
-                int dcol = 0;
-                switch (i)
-                {
-                    case 0: drow = 0; dcol = 1; break;
-                    case 1: drow = 0; dcol = -1; break;
-                    case 2: drow = 1; dcol = 0;break;
-                    case 3: drow = -1; dcol = 0; break;
 
-                }
-                CellCoord tentative = new CellCoord(current.row + drow, current.col + dcol);
+            List<CellCoord> connected = GetConnectedList(current);
+
+            foreach (CellCoord tentative in connected)
+            { 
                 if (!visited.ContainsKey(tentative) && AreConnected(current, tentative))
                 {
-                    visited[tentative] = new DistanceAndParent(current_distance+1, current);
+                    visited[tentative] = new DistanceAndParent(current_distance + 1, current);
                     open_q.Enqueue(tentative);
                 }
-                
             }
         }
 
@@ -258,6 +275,17 @@ public class LevelData : MonoBehaviour
         {
             return null;
         }
+
+    }
+
+    // walk through the node starting from the 'source cell'
+    // keeping direction of flow in mind apply the flow to each cell
+    // The logic here is somewhat like MakeShortestPath but 
+    void ApplyFlow(CellCoord parent, CellCoord start, float flow_to_apply)
+    {
+        ElementControllerAtCellCoord(start);
+
+
 
     }
 
